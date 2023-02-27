@@ -13,26 +13,23 @@ import makePassiveEventOption from "./makePassiveEventOption";
 function midPointBtw(p1, p2) {
   return {
     x: p1.x + (p2.x - p1.x) / 2,
-    y: p1.y + (p2.y - p1.y) / 2,
+    y: p1.y + (p2.y - p1.y) / 2
   };
 }
 
 const canvasStyle = {
   display: "block",
-  position: "absolute",
+  position: "absolute"
 };
 
 // The order of these is important: grid > drawing > temp > interface
 const canvasTypes = ["grid", "drawing", "temp", "interface"];
 
-const dimensionsPropTypes = PropTypes.oneOfType([
-  PropTypes.number,
-  PropTypes.string,
-]);
+const dimensionsPropTypes = PropTypes.oneOfType([PropTypes.number, PropTypes.string]);
 
 const boundsProp = PropTypes.shape({
   min: PropTypes.number.isRequired,
-  max: PropTypes.number.isRequired,
+  max: PropTypes.number.isRequired
 });
 
 export default class CanvasDraw extends PureComponent {
@@ -61,7 +58,7 @@ export default class CanvasDraw extends PureComponent {
     enablePanAndZoom: PropTypes.bool,
     mouseZoomFactor: PropTypes.number,
     zoomExtents: boundsProp,
-    clampLinesToDocument: PropTypes.bool,
+    clampLinesToDocument: PropTypes.bool
   };
 
   static defaultProps = {
@@ -89,7 +86,7 @@ export default class CanvasDraw extends PureComponent {
     enablePanAndZoom: false,
     mouseZoomFactor: 0.01,
     zoomExtents: { min: 0.33, max: 3 },
-    clampLinesToDocument: false,
+    clampLinesToDocument: false
   };
 
   ///// public API /////////////////////////////////////////////////////////////
@@ -115,7 +112,7 @@ export default class CanvasDraw extends PureComponent {
     this.interactionSM = new DefaultState();
     this.coordSystem = new CoordinateSystem({
       scaleExtents: props.zoomExtents,
-      documentSize: { width: props.canvasWidth, height: props.canvasHeight },
+      documentSize: { width: props.canvasWidth, height: props.canvasHeight }
     });
     this.coordSystem.attachViewChangeListener(this.applyView.bind(this));
   }
@@ -157,7 +154,7 @@ export default class CanvasDraw extends PureComponent {
     return JSON.stringify({
       lines: this.lines,
       width: this.props.canvasWidth,
-      height: this.props.canvasHeight,
+      height: this.props.canvasHeight
     });
   };
 
@@ -237,13 +234,10 @@ export default class CanvasDraw extends PureComponent {
 
     this.clear();
 
-    if (
-      width === this.props.canvasWidth &&
-      height === this.props.canvasHeight
-    ) {
+    if (width === this.props.canvasWidth && height === this.props.canvasHeight) {
       this.simulateDrawingLines({
         lines,
-        immediate,
+        immediate
       });
     } else {
       // we need to rescale the lines based on saved & current dimensions
@@ -256,11 +250,11 @@ export default class CanvasDraw extends PureComponent {
           ...line,
           points: line.points.map((p) => ({
             x: p.x * scaleX,
-            y: p.y * scaleY,
+            y: p.y * scaleY
           })),
-          brushRadius: line.brushRadius * scaleAvg,
+          brushRadius: line.brushRadius * scaleAvg
         })),
-        immediate,
+        immediate
       });
     }
   };
@@ -275,14 +269,12 @@ export default class CanvasDraw extends PureComponent {
       enabled: true,
       initialPoint: {
         x: window.innerWidth / 2,
-        y: window.innerHeight / 2,
-      },
+        y: window.innerHeight / 2
+      }
     });
     this.chainLength = this.props.lazyRadius * window.devicePixelRatio;
 
-    this.canvasObserver = new ResizeObserver((entries, observer) =>
-      this.handleCanvasResize(entries, observer)
-    );
+    this.canvasObserver = new ResizeObserver((entries, observer) => this.handleCanvasResize(entries, observer));
     this.canvasObserver.observe(this.canvasContainer);
 
     this.drawImage();
@@ -291,14 +283,8 @@ export default class CanvasDraw extends PureComponent {
     window.setTimeout(() => {
       const initX = window.innerWidth / 2;
       const initY = window.innerHeight / 2;
-      this.lazy.update(
-        { x: initX - this.chainLength / 4, y: initY },
-        { both: true }
-      );
-      this.lazy.update(
-        { x: initX + this.chainLength / 4, y: initY },
-        { both: false }
-      );
+      this.lazy.update({ x: initX - this.chainLength / 4, y: initY }, { both: true });
+      this.lazy.update({ x: initX + this.chainLength / 4, y: initY }, { both: false });
       this.mouseHasMoved = true;
       this.valuesChanged = true;
       this.clearExceptErasedLines();
@@ -313,11 +299,7 @@ export default class CanvasDraw extends PureComponent {
     // This is necessary to prevent the default event action on chrome.
     // https://github.com/facebook/react/issues/14856
     this.canvas.interface &&
-      this.canvas.interface.addEventListener(
-        "wheel",
-        this.handleWheel,
-        makePassiveEventOption()
-      );
+      this.canvas.interface.addEventListener("wheel", this.handleWheel, makePassiveEventOption());
   }
 
   componentDidUpdate(prevProps) {
@@ -348,8 +330,7 @@ export default class CanvasDraw extends PureComponent {
 
   componentWillUnmount = () => {
     this.canvasObserver.unobserve(this.canvasContainer);
-    this.canvas.interface &&
-      this.canvas.interface.removeEventListener("wheel", this.handleWheel);
+    this.canvas.interface && this.canvas.interface.removeEventListener("wheel", this.handleWheel);
   };
 
   render() {
@@ -362,7 +343,7 @@ export default class CanvasDraw extends PureComponent {
           touchAction: "none",
           width: this.props.canvasWidth,
           height: this.props.canvasHeight,
-          ...this.props.style,
+          ...this.props.style
         }}
         ref={(container) => {
           if (container) {
@@ -386,11 +367,13 @@ export default class CanvasDraw extends PureComponent {
               }}
               style={{ ...canvasStyle }}
               onMouseDown={isInterface ? this.handleDrawStart : undefined}
-              onMouseMove={isInterface ? this.handleDrawMove : undefined}
+              // onMouseMove={isInterface ? this.handleDrawMove : undefined}
+              onMouseMove={isInterface ? this.handleDrawEnd : undefined}
               onMouseUp={isInterface ? this.handleDrawEnd : undefined}
               onMouseOut={isInterface ? this.handleDrawEnd : undefined}
               onTouchStart={isInterface ? this.handleDrawStart : undefined}
-              onTouchMove={isInterface ? this.handleDrawMove : undefined}
+              // onTouchMove={isInterface ? this.handleDrawMove : undefined}
+              onTouchMove={isInterface ? this.handleDrawEnd : undefined}
               onTouchEnd={isInterface ? this.handleDrawEnd : undefined}
               onTouchCancel={isInterface ? this.handleDrawEnd : undefined}
             />
@@ -473,7 +456,7 @@ export default class CanvasDraw extends PureComponent {
     if (this.props.clampLinesToDocument) {
       return {
         x: Math.max(Math.min(point.x, this.props.canvasWidth), 0),
-        y: Math.max(Math.min(point.y, this.props.canvasHeight), 0),
+        y: Math.max(Math.min(point.y, this.props.canvasHeight), 0)
       };
     } else {
       return point;
@@ -481,9 +464,7 @@ export default class CanvasDraw extends PureComponent {
   };
 
   redrawImage = () => {
-    this.image &&
-      this.image.complete &&
-      drawImage({ ctx: this.ctx.grid, img: this.image });
+    this.image && this.image.complete && drawImage({ ctx: this.ctx.grid, img: this.image });
   };
 
   simulateDrawingLines = ({ lines, immediate }) => {
@@ -501,7 +482,7 @@ export default class CanvasDraw extends PureComponent {
         this.drawPoints({
           points,
           brushColor,
-          brushRadius,
+          brushRadius
         });
 
         // Save line with the drawn points
@@ -517,7 +498,7 @@ export default class CanvasDraw extends PureComponent {
           this.drawPoints({
             points: points.slice(0, i + 1),
             brushColor,
-            brushRadius,
+            brushRadius
           });
         }, curTime);
       }
@@ -574,7 +555,7 @@ export default class CanvasDraw extends PureComponent {
     this.lines.push({
       points: [...this.points],
       brushColor: brushColor || this.props.brushColor,
-      brushRadius: brushRadius || this.props.brushRadius,
+      brushRadius: brushRadius || this.props.brushRadius
     });
 
     // Reset points array
@@ -582,13 +563,7 @@ export default class CanvasDraw extends PureComponent {
 
     // Copy the line to the drawing canvas
     this.inClientSpace([this.ctx.drawing, this.ctx.temp], () => {
-      this.ctx.drawing.drawImage(
-        this.canvas.temp,
-        0,
-        0,
-        this.canvas.drawing.width,
-        this.canvas.drawing.height
-      );
+      this.ctx.drawing.drawImage(this.canvas.temp, 0, 0, this.canvas.drawing.width, this.canvas.drawing.height);
     });
 
     // Clear the temporary line-drawing canvas
@@ -602,9 +577,7 @@ export default class CanvasDraw extends PureComponent {
   };
 
   clearWindow = (ctx) => {
-    this.inClientSpace([ctx], () =>
-      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
-    );
+    this.inClientSpace([ctx], () => ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height));
   };
 
   clearExceptErasedLines = () => {
@@ -634,14 +607,7 @@ export default class CanvasDraw extends PureComponent {
   inClientSpace = (ctxs, action) => {
     ctxs.forEach((ctx) => {
       ctx.save();
-      ctx.setTransform(
-        IDENTITY.a,
-        IDENTITY.b,
-        IDENTITY.c,
-        IDENTITY.d,
-        IDENTITY.e,
-        IDENTITY.f
-      );
+      ctx.setTransform(IDENTITY.a, IDENTITY.b, IDENTITY.c, IDENTITY.d, IDENTITY.e, IDENTITY.f);
     });
 
     try {
@@ -732,12 +698,7 @@ export default class CanvasDraw extends PureComponent {
       ctx.lineCap = "round";
       ctx.setLineDash([2, 4]);
       ctx.strokeStyle = this.props.catenaryColor;
-      this.catenary.drawToCanvas(
-        this.ctx.interface,
-        brush,
-        pointer,
-        this.chainLength
-      );
+      this.catenary.drawToCanvas(this.ctx.interface, brush, pointer, this.chainLength);
       ctx.stroke();
     }
 
